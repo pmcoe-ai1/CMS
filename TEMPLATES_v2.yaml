@@ -1,0 +1,854 @@
+# ═══════════════════════════════════════════════════════════════
+# TEMPLATES — Documents 8-12 of 12
+# ═══════════════════════════════════════════════════════════════
+#
+# Five starter templates that agents copy when building new
+# services, definitions, sessions, tests, and contracts.
+#
+# Version 1.0.0 | February 2026
+# ═══════════════════════════════════════════════════════════════
+
+
+# ═══════════════════════════════════════════════════════════════
+# DOCUMENT 8: OBJECT SERVICE TEMPLATE
+# ═══════════════════════════════════════════════════════════════
+#
+# Full-Stack Coding Agent copies this template when building a new object service.
+# The template enforces all architecture rules from ARCHITECTURE.md.
+#
+# File structure for a new service:
+#
+#   api/services/{service-name}/
+#   ├── index.js          ← Main service (copy from below)
+#   ├── errors.js         ← Service-specific error classes
+#   └── __tests__/
+#       └── index.test.js ← Unit tests (copy from test template)
+#
+# After creating the service, Full-Stack Coding Agent must:
+#   1. Add the service to SERVICE_REGISTRY.yaml
+#   2. Create contract tests (Document 12 template)
+#   3. Run Full-Stack Coding Agent's validation checklist
+# ═══════════════════════════════════════════════════════════════
+
+
+# ─────────────────────────────────────────────────────────────
+# FILE: api/services/{service-name}/index.js
+# ─────────────────────────────────────────────────────────────
+# /**
+#  * {ServiceName}Service
+#  *
+#  * {One-line description of what this service does}
+#  *
+#  * Published Interface (see SERVICE_REGISTRY.yaml):
+#  *   - {operationName}: {brief description}
+#  *
+#  * Architecture Rules:
+#  *   - This service is GENERIC — no application-specific logic
+#  *   - All inputs come through the published interface
+#  *   - All errors are typed (see errors.js)
+#  *   - No direct imports from other services
+#  *   - Dependencies are declared in the registry
+#  */
+#
+# const { ServiceError } = require('../../errors/ServiceError');
+# const { {ErrorName} } = require('./errors');
+#
+# class {ServiceName}Service {
+#   /**
+#    * @param {Object} deps - Injected dependencies
+#    * @param {Object} deps.db - Database pool
+#    * @param {Object} [deps.logger] - Logger instance
+#    */
+#   constructor(deps = {}) {
+#     this.db = deps.db;
+#     this.logger = deps.logger || console;
+#   }
+#
+#   /**
+#    * {operationName}
+#    *
+#    * {Description matching SERVICE_REGISTRY.yaml}
+#    *
+#    * @param {Object} input - Validated input per registry schema
+#    * @param {string} input.{fieldName} - {description}
+#    * @returns {Promise<Object>} Output per registry schema
+#    * @throws {{ErrorName}} When {condition}
+#    */
+#   async {operationName}(input) {
+#     // 1. Validate required inputs
+#     if (!input.{requiredField}) {
+#       throw new {ErrorName}('{MISSING_FIELD}', '{field} is required');
+#     }
+#
+#     // 2. Execute the operation
+#     //    - Database queries go here
+#     //    - External API calls go here
+#     //    - Business logic does NOT go here (it belongs in definitions)
+#
+#     // 3. Return output matching registry schema
+#     return {
+#       // Every field documented in SERVICE_REGISTRY.yaml
+#     };
+#   }
+# }
+#
+# module.exports = { {ServiceName}Service };
+
+
+# ─────────────────────────────────────────────────────────────
+# FILE: api/services/{service-name}/errors.js
+# ─────────────────────────────────────────────────────────────
+# const { ServiceError } = require('../../errors/ServiceError');
+#
+# /**
+#  * {SERVICE_NAME} errors
+#  *
+#  * Every error code must:
+#  *   - Be UPPER_SNAKE_CASE
+#  *   - Be unique within this service
+#  *   - Match SERVICE_REGISTRY.yaml exactly
+#  *   - Include a human-readable message
+#  */
+#
+# class {ErrorName} extends ServiceError {
+#   constructor(code, message, details = {}) {
+#     super(code, message, '{ServiceName}Service', details);
+#   }
+# }
+#
+# // Error codes — must match SERVICE_REGISTRY.yaml
+# const ERROR_CODES = {
+#   {ERROR_CODE_1}: '{ERROR_CODE_1}',
+#   {ERROR_CODE_2}: '{ERROR_CODE_2}',
+# };
+#
+# module.exports = { {ErrorName}, ERROR_CODES };
+
+
+# ─────────────────────────────────────────────────────────────
+# FILE: api/errors/ServiceError.js (shared base class)
+# ─────────────────────────────────────────────────────────────
+# /**
+#  * Base error class for all service errors.
+#  * Used by the execution engine for typed error handling.
+#  */
+# class ServiceError extends Error {
+#   constructor(code, message, serviceName, details = {}) {
+#     super(message);
+#     this.name = 'ServiceError';
+#     this.code = code;           // UPPER_SNAKE_CASE
+#     this.serviceName = serviceName;
+#     this.details = details;
+#     this.isServiceError = true;  // Flag for engine error handling
+#   }
+#
+#   toJSON() {
+#     return {
+#       code: this.code,
+#       message: this.message,
+#       service: this.serviceName,
+#       details: this.details,
+#     };
+#   }
+# }
+#
+# module.exports = { ServiceError };
+
+
+# ═══════════════════════════════════════════════════════════════
+# DOCUMENT 9: APPLICATION DEFINITION TEMPLATE
+# ═══════════════════════════════════════════════════════════════
+#
+# Solution Architect copies this template when creating a new
+# application definition. The template shows the complete
+# structure with inline comments explaining every field.
+# ═══════════════════════════════════════════════════════════════
+
+
+# ─────────────────────────────────────────────────────────────
+# TEMPLATE A: Minimal Definition
+# ─────────────────────────────────────────────────────────────
+# ---
+# name: my-workflow                     # lowercase-hyphenated, unique
+# version: "1.0.0"                      # semver
+# description: "What this workflow does"
+#
+# trigger:
+#   type: api_event                     # api_event | schedule | webhook | manual
+#   event: my.event.name                # Event name for api_event triggers
+#   expected_data:                      # Optional: document expected input
+#     email: { type: string, required: true }
+#     amount: { type: integer, required: false }
+#
+# steps:
+#   - id: do_something                  # unique within definition
+#     type: service_call                # service_call | condition | wait | for_each
+#     service: EmailService             # Must exist in SERVICE_REGISTRY.yaml
+#     operation: send                   # Must exist in service's operations
+#     input:                            # Map to service input schema
+#       to: "{{trigger.email}}"         # Variable reference
+#       subject: "Static value"         # Literal value
+#     output_as: result                 # Store output as steps.result.*
+
+
+# ─────────────────────────────────────────────────────────────
+# TEMPLATE B: Complex Definition with All Features
+# ─────────────────────────────────────────────────────────────
+# ---
+# name: complex-workflow
+# version: "1.0.0"
+# description: "Shows every definition feature"
+#
+# constants:                            # Named constants: {{const.name}}
+#   template_id: "tmpl_abc_123"
+#   max_retries: 3
+#
+# trigger:
+#   type: api_event
+#   event: complex.started
+#   expected_data:
+#     email: { type: string, required: true }
+#     items: { type: array, required: true }
+#
+# steps:
+#   # ── Service Call with Error Handling ──
+#   - id: first_step
+#     type: service_call
+#     service: ContactService
+#     operation: get
+#     input:
+#       email: "{{trigger.email}}"
+#     output_as: contact
+#     on_error:
+#       - type: retry
+#         max_retries: 3
+#         backoff:
+#           strategy: exponential       # fixed | linear | exponential
+#           initial_delay: 1000         # milliseconds
+#           max_delay: 30000
+#         only_errors: ["CRM_SYNC_ERROR"]  # Only retry these codes
+#       - type: skip                    # If retries exhausted, skip
+#         record_as: dead_letter        # dead_letter | warning | info
+#
+#   # ── Condition with Branches ──
+#   - id: check_status
+#     type: condition
+#     condition:
+#       field: "{{steps.contact.properties.status}}"
+#       operator: equals               # See EXECUTION_ENGINE_SPEC.md Section 5.2
+#       value: "active"
+#     then: send_email                 # Step ID to jump to if true
+#     else: end_inactive               # Step ID if false (optional)
+#
+#   # ── Service Call with Preconditions ──
+#   - id: send_email
+#     type: service_call
+#     service: EmailService
+#     operation: send
+#     preconditions:
+#       - field: "{{steps.contact.properties.unsubscribed}}"
+#         operator: equals
+#         value: false
+#         on_fail: skip                # skip | branch | halt
+#     input:
+#       to: "{{trigger.email}}"
+#       templateId: "{{const.template_id}}"
+#       variables:
+#         name: "{{steps.contact.properties.firstName}}"
+#     output_as: email_result
+#
+#   # ── Wait Step ──
+#   - id: wait_1_hour
+#     type: wait
+#     delay:
+#       value: 1
+#       unit: hours                    # minutes | hours | days
+#
+#   # ── For-Each Loop ──
+#   - id: process_items
+#     type: for_each
+#     collection: "{{trigger.items}}"  # Must resolve to array
+#     as: item                         # {{loop.item}} inside do block
+#     do:
+#       - id: process_one
+#         type: service_call
+#         service: ContactService
+#         operation: update
+#         input:
+#           email: "{{loop.item.email}}"
+#           properties:
+#             processed: true
+#         output_as: process_result
+#         on_error:
+#           - type: skip
+#             record_as: dead_letter
+#     output_as: all_results           # Array of per-iteration outputs
+#     on_iteration_error: continue     # continue | halt
+#
+#   # ── Step with Post-Completion Branches ──
+#   - id: final_check
+#     type: service_call
+#     service: EnrollmentService
+#     operation: check
+#     input:
+#       email: "{{trigger.email}}"
+#       courseId: "pmp-2026"
+#     output_as: enrollment
+#     branches:
+#       conditions:
+#         - condition:
+#             field: "{{steps.enrollment.status}}"
+#             operator: equals
+#             value: "enrolled_same"
+#           then: convert
+#         - condition:
+#             field: "{{steps.enrollment.status}}"
+#             operator: equals
+#             value: "enrolled_different"
+#           then: convert
+#       default: continue              # or a step ID
+#
+#   - id: end_inactive
+#     type: service_call
+#     service: NotificationService
+#     operation: send
+#     input:
+#       channel: log
+#       recipient: workflows
+#       message: { subject: "Inactive", body: "Contact is inactive" }
+#     output_as: log_result
+#
+#   - id: convert
+#     type: service_call
+#     service: ContactService
+#     operation: update
+#     input:
+#       email: "{{trigger.email}}"
+#       properties: { status: "converted" }
+#     output_as: convert_result
+#
+# # ── Default Error Handling (applies to steps without own on_error) ──
+# on_error:
+#   - type: retry
+#     max_retries: 2
+#     backoff: { strategy: fixed, initial_delay: 2000 }
+#   - type: halt
+#
+# metadata:
+#   author: "Solution Architect"
+#   created: "2026-02-15"
+#   tags: ["example", "template"]
+#   notes: "This is a template — not a real workflow"
+
+
+# ═══════════════════════════════════════════════════════════════
+# DOCUMENT 10: AGENT SESSION TEMPLATE
+# ═══════════════════════════════════════════════════════════════
+#
+# Structure for AGENT_*.md files that agents read at session start.
+# Each agent has their own file. These files track project state
+# (what's built, what's next) — NOT operational knowledge (that
+# goes in CLAUDE-agent-*.md via self-learning framework).
+# ═══════════════════════════════════════════════════════════════
+
+
+# ─────────────────────────────────────────────────────────────
+# FILE: CODING_AGENT.md (Full-Stack Coding Agent)
+# ─────────────────────────────────────────────────────────────
+# # Full-Stack Coding Agent — Backend Service Builder
+#
+# ## Current Phase
+# Phase B{N}: {Phase Name}
+#
+# ## Completed Services
+# | Service | Version | Tests | Contract Tests | Notes |
+# |---------|---------|-------|----------------|-------|
+# | EmailService | 1.0.0 | 12/12 | Pass | Deployed to staging |
+# | ... | ... | ... | ... | ... |
+#
+# ## In Progress
+# - Building: {ServiceName} — {current status}
+# - Blocked on: {nothing / description}
+#
+# ## Next Up
+# 1. {Next service to build}
+# 2. {Service after that}
+#
+# ## Architecture Reminders
+# - Read ARCHITECTURE.md before every session
+# - Every service needs: index.js, errors.js, __tests__/index.test.js
+# - Every service needs a SERVICE_REGISTRY.yaml entry
+# - Run Full-Stack Coding Agent's contract tests before marking complete
+#
+# ## Known Issues
+# - {Issue}: {Description} — {Workaround if any}
+#
+# ## Session History
+# | Date | What was done | Outcome |
+# |------|--------------|---------|
+# | 2026-02-20 | Built EmailService | 12 tests passing, deployed |
+# | ... | ... | ... |
+
+
+# ─────────────────────────────────────────────────────────────
+# FILE: REMOVED - merged into CODING_AGENT.md
+# ─────────────────────────────────────────────────────────────
+# # REMOVED - merged into Full-Stack Coding Agent Frontend Builder
+#
+# ## Current Phase
+# Phase B{N}: {Phase Name}
+#
+# ## Completed Pages/Components
+# | Component | Route | Status | Notes |
+# |-----------|-------|--------|-------|
+# | ExecutionMonitor | /executions/:id | Complete | Real-time status |
+# | ... | ... | ... | ... |
+#
+# ## In Progress
+# - Building: {Component} — {current status}
+# - Waiting for API: {endpoint if blocked}
+#
+# ## Next Up
+# 1. {Next component to build}
+# 2. {Component after that}
+#
+# ## API Endpoints Consumed
+# | Endpoint | Component | Status |
+# |----------|-----------|--------|
+# | GET /executions | ExecutionList | Working |
+# | ... | ... | ... |
+#
+# ## Session History
+# | Date | What was done | Outcome |
+# |------|--------------|---------|
+# | ... | ... | ... |
+
+
+# ─────────────────────────────────────────────────────────────
+# FILE: REMOVED - merged into CODING_AGENT.md
+# ─────────────────────────────────────────────────────────────
+# # REMOVED - merged into Full-Stack Coding Agent Testing & DevOps
+#
+# ## Current Phase
+# Phase B{N}: {Phase Name}
+#
+# ## Test Coverage
+# | Area | Unit | Contract | E2E | Coverage % |
+# |------|------|----------|-----|-----------|
+# | EmailService | 12/12 | Pass | N/A | 94% |
+# | ... | ... | ... | ... | ... |
+#
+# ## CI/CD Status
+# - Pipeline: {passing / failing}
+# - Last deploy: {date} to {staging / production}
+# - Pending: {what needs deploying}
+#
+# ## Validation Queue
+# | Service/Component | Submitted By | Status | Notes |
+# |-------------------|-------------|--------|-------|
+# | TemplateService | Full-Stack Coding Agent | Pending review | |
+# | ... | ... | ... | ... |
+#
+# ## Architecture Violations Found
+# | Date | Violation | Where | Resolution |
+# |------|-----------|-------|------------|
+# | ... | ... | ... | ... |
+#
+# ## Environment Status
+# | Env | URL | DB | Last Verified |
+# |-----|-----|-----|--------------|
+# | Staging | pmcoe-staging.up.railway.app | Connected | 2026-02-20 |
+# | Prod | pmcoe.up.railway.app | Connected | 2026-02-20 |
+#
+# ## Session History
+# | Date | What was done | Outcome |
+# |------|--------------|---------|
+# | ... | ... | ... |
+
+
+# ═══════════════════════════════════════════════════════════════
+# DOCUMENT 11: TEST TEMPLATES
+# ═══════════════════════════════════════════════════════════════
+#
+# Starter templates for unit tests, component tests, and E2E tests.
+# Full-Stack Coding Agent uses unit test template, Full-Stack Coding Agent uses all three.
+# ═══════════════════════════════════════════════════════════════
+
+
+# ─────────────────────────────────────────────────────────────
+# UNIT TEST TEMPLATE
+# FILE: api/services/{service-name}/__tests__/index.test.js
+# ─────────────────────────────────────────────────────────────
+# const { {ServiceName}Service } = require('../index');
+# const { {ErrorName} } = require('../errors');
+#
+# describe('{ServiceName}Service', () => {
+#   let service;
+#   let mockDb;
+#
+#   beforeEach(() => {
+#     // Create mock database pool
+#     mockDb = {
+#       query: jest.fn(),
+#     };
+#     service = new {ServiceName}Service({ db: mockDb });
+#   });
+#
+#   describe('{operationName}', () => {
+#     // ── Happy Path ──
+#     it('should {expected behavior} when {condition}', async () => {
+#       // Arrange
+#       mockDb.query.mockResolvedValueOnce({
+#         rows: [{ /* mock db row */ }],
+#       });
+#
+#       // Act
+#       const result = await service.{operationName}({
+#         // Valid input matching registry schema
+#       });
+#
+#       // Assert
+#       expect(result).toMatchObject({
+#         // Expected output matching registry schema
+#       });
+#     });
+#
+#     // ── Error Cases (one test per error code in registry) ──
+#     it('should throw {ERROR_CODE} when {condition}', async () => {
+#       await expect(
+#         service.{operationName}({
+#           // Input that triggers this error
+#         })
+#       ).rejects.toThrow({ErrorName});
+#
+#       // Verify error code
+#       try {
+#         await service.{operationName}({ /* bad input */ });
+#       } catch (err) {
+#         expect(err.code).toBe('{ERROR_CODE}');
+#         expect(err.isServiceError).toBe(true);
+#       }
+#     });
+#
+#     // ── Edge Cases ──
+#     it('should handle {edge case description}', async () => {
+#       // Test boundary conditions, null inputs, empty arrays, etc.
+#     });
+#
+#     // ── Side Effects ──
+#     it('should {side effect} when {condition}', async () => {
+#       await service.{operationName}({ /* input */ });
+#
+#       // Verify database was called correctly
+#       expect(mockDb.query).toHaveBeenCalledWith(
+#         expect.stringContaining('{expected SQL fragment}'),
+#         expect.arrayContaining([/* expected params */])
+#       );
+#     });
+#   });
+# });
+
+
+# ─────────────────────────────────────────────────────────────
+# COMPONENT TEST TEMPLATE
+# FILE: tests/component/{service-name}.component.test.js
+# ─────────────────────────────────────────────────────────────
+# /**
+#  * Component test for {ServiceName}Service
+#  *
+#  * Tests the service with a REAL database connection (test DB)
+#  * but mocks external APIs (Gmail, SendGrid, Stripe, Claude).
+#  *
+#  * Run: npm run test:component
+#  * Requires: TEST_DATABASE_URL environment variable
+#  */
+#
+# const { {ServiceName}Service } = require('../../api/services/{service-name}');
+# const { getTestDb, cleanupTestDb } = require('../helpers/test-db');
+#
+# describe('{ServiceName}Service (component)', () => {
+#   let service;
+#   let db;
+#
+#   beforeAll(async () => {
+#     db = await getTestDb();
+#     service = new {ServiceName}Service({ db });
+#   });
+#
+#   afterAll(async () => {
+#     await cleanupTestDb(db);
+#   });
+#
+#   beforeEach(async () => {
+#     // Clean relevant tables before each test
+#     await db.query('DELETE FROM {table_name}');
+#   });
+#
+#   it('should {operation} with real database', async () => {
+#     // This test verifies SQL queries work against real PostgreSQL
+#     const result = await service.{operationName}({
+#       // Real input
+#     });
+#
+#     // Verify database state
+#     const { rows } = await db.query(
+#       'SELECT * FROM {table_name} WHERE {condition}'
+#     );
+#     expect(rows).toHaveLength(1);
+#     expect(rows[0].{column}).toBe({expected});
+#   });
+# });
+
+
+# ─────────────────────────────────────────────────────────────
+# E2E TEST TEMPLATE
+# FILE: tests/e2e/{workflow-name}.e2e.test.js
+# ─────────────────────────────────────────────────────────────
+# /**
+#  * End-to-end test for {workflow-name} workflow
+#  *
+#  * Tests the COMPLETE workflow from API trigger through
+#  * execution engine to service calls and database state.
+#  * Runs against staging environment or local with test DB.
+#  *
+#  * Run: npm run test:e2e
+#  */
+#
+# const request = require('supertest');
+# const app = require('../../api/app');
+# const { getTestDb, cleanupTestDb } = require('../helpers/test-db');
+#
+# describe('{workflow-name} E2E', () => {
+#   let db;
+#
+#   beforeAll(async () => {
+#     db = await getTestDb();
+#   });
+#
+#   afterAll(async () => {
+#     await cleanupTestDb(db);
+#   });
+#
+#   it('should complete the full {workflow} flow', async () => {
+#     // 1. Trigger the workflow via API
+#     const triggerResponse = await request(app)
+#       .post('/api/{trigger-endpoint}')
+#       .send({
+#         // Trigger data
+#       })
+#       .expect(201);
+#
+#     const { executionId } = triggerResponse.body;
+#
+#     // 2. Wait for execution to complete (poll status)
+#     let status = 'running';
+#     let attempts = 0;
+#     while (status === 'running' && attempts < 30) {
+#       const statusResponse = await request(app)
+#         .get(`/api/executions/${executionId}`)
+#         .expect(200);
+#       status = statusResponse.body.status;
+#       if (status === 'running' || status === 'waiting') {
+#         await new Promise(r => setTimeout(r, 1000));
+#       }
+#       attempts++;
+#     }
+#
+#     // 3. Verify final state
+#     expect(status).toBe('completed');
+#
+#     // 4. Verify database state
+#     const { rows } = await db.query(
+#       'SELECT * FROM {table} WHERE {condition}'
+#     );
+#     expect(rows).toHaveLength(1);
+#     expect(rows[0].{column}).toBe({expected});
+#
+#     // 5. Verify execution events
+#     const eventsResponse = await request(app)
+#       .get(`/api/executions/${executionId}`)
+#       .expect(200);
+#     const events = eventsResponse.body.events;
+#     expect(events).toContainEqual(
+#       expect.objectContaining({ eventType: 'execution_completed' })
+#     );
+#   });
+# });
+
+
+# ═══════════════════════════════════════════════════════════════
+# DOCUMENT 12: CONTRACT TEST TEMPLATE
+# ═══════════════════════════════════════════════════════════════
+#
+# Contract tests verify that a service's IMPLEMENTATION matches
+# its PUBLISHED INTERFACE in SERVICE_REGISTRY.yaml. Full-Stack Coding Agent
+# generates these automatically from the registry.
+#
+# If a contract test fails, either:
+#   a) The implementation is wrong (fix the code), or
+#   b) The registry is wrong (fix the registry + get approval)
+#
+# Contract tests are the primary enforcement mechanism for
+# architecture standard STD-003 (services registered).
+# ═══════════════════════════════════════════════════════════════
+
+
+# ─────────────────────────────────────────────────────────────
+# CONTRACT TEST TEMPLATE
+# FILE: tests/contracts/{service-name}.contract.test.js
+# ─────────────────────────────────────────────────────────────
+# /**
+#  * Contract test for {ServiceName}Service
+#  *
+#  * AUTO-GENERATED from SERVICE_REGISTRY.yaml
+#  * DO NOT EDIT MANUALLY — regenerate with:
+#  *   node tests/contracts/generate.js {ServiceName}
+#  *
+#  * Verifies:
+#  *   - Service exports the expected class
+#  *   - All operations exist as methods
+#  *   - Operations accept documented input fields
+#  *   - Operations return documented output fields
+#  *   - Operations throw documented error codes
+#  *   - No undocumented operations exist
+#  */
+#
+# const yaml = require('js-yaml');
+# const fs = require('fs');
+# const path = require('path');
+# const { {ServiceName}Service } = require('../../api/services/{service-name}');
+#
+# // Load registry
+# const registryPath = path.join(__dirname, '../../SERVICE_REGISTRY.yaml');
+# const registry = yaml.load(fs.readFileSync(registryPath, 'utf8'));
+# const spec = registry.services.{ServiceName};
+#
+# describe('{ServiceName}Service Contract', () => {
+#   let service;
+#
+#   beforeAll(() => {
+#     // Create service with mock dependencies
+#     service = new {ServiceName}Service({
+#       db: { query: jest.fn() },
+#       logger: { info: jest.fn(), error: jest.fn() },
+#     });
+#   });
+#
+#   // ── Verify all operations exist ──
+#   describe('operations', () => {
+#     const expectedOperations = Object.keys(spec.operations);
+#
+#     expectedOperations.forEach(opName => {
+#       it(`should have method: ${opName}`, () => {
+#         expect(typeof service[opName]).toBe('function');
+#       });
+#     });
+#
+#     it('should not have undocumented public operations', () => {
+#       const publicMethods = Object.getOwnPropertyNames(
+#         Object.getPrototypeOf(service)
+#       ).filter(m => m !== 'constructor' && !m.startsWith('_'));
+#
+#       const undocumented = publicMethods.filter(
+#         m => !expectedOperations.includes(m)
+#       );
+#       expect(undocumented).toEqual([]);
+#     });
+#   });
+#
+#   // ── Verify each operation's contract ──
+#   // (Generated per operation from registry)
+#   describe('{operationName}', () => {
+#     const opSpec = spec.operations.{operationName};
+#
+#     // Output shape test (happy path with mocked DB)
+#     it('should return output matching registry schema', async () => {
+#       // Arrange: mock DB to return valid data
+#       service.db.query.mockResolvedValueOnce({
+#         rows: [{ /* data that produces valid output */ }],
+#       });
+#
+#       // Act
+#       const result = await service.{operationName}({
+#         // Minimal valid input per registry
+#       });
+#
+#       // Assert: every output field documented in registry exists
+#       const expectedOutputFields = Object.keys(opSpec.output);
+#       expectedOutputFields.forEach(field => {
+#         expect(result).toHaveProperty(field);
+#       });
+#     });
+#
+#     // Error code tests (one per documented error)
+#     opSpec.errors.forEach(errorSpec => {
+#       it(`should throw ${errorSpec.code} error`, async () => {
+#         // Arrange: set up conditions that trigger this error
+#         // (specific to each error code)
+#
+#         try {
+#           await service.{operationName}({
+#             // Input that triggers this error
+#           });
+#           fail('Should have thrown');
+#         } catch (err) {
+#           expect(err.code).toBe(errorSpec.code);
+#           expect(err.isServiceError).toBe(true);
+#         }
+#       });
+#     });
+#   });
+# });
+
+
+# ─────────────────────────────────────────────────────────────
+# CONTRACT TEST GENERATOR
+# FILE: tests/contracts/generate.js
+# ─────────────────────────────────────────────────────────────
+# /**
+#  * Generates contract test files from SERVICE_REGISTRY.yaml
+#  *
+#  * Usage:
+#  *   node tests/contracts/generate.js                  # All services
+#  *   node tests/contracts/generate.js EmailService      # One service
+#  *
+#  * The generator reads the registry and creates test files
+#  * that verify each service's implementation matches its
+#  * published interface. This is run by Full-Stack Coding Agent whenever:
+#  *   - A new service is created
+#  *   - A service's registry entry is updated
+#  *   - During CI as part of the test suite
+#  */
+#
+# // Implementation outline:
+# // 1. Load SERVICE_REGISTRY.yaml
+# // 2. For each service (or specified service):
+# //    a. Read operation names, input schemas, output schemas, error codes
+# //    b. Generate test file from template
+# //    c. Write to tests/contracts/{service-name}.contract.test.js
+# // 3. Report what was generated
+#
+# // The generated tests are committed to git and run in CI.
+# // If a service changes its interface without updating the
+# // registry, the contract tests fail.
+
+
+# ═══════════════════════════════════════════════════════════════
+# END OF TEMPLATES
+# ═══════════════════════════════════════════════════════════════
+#
+# Summary:
+#   Document 8:  Object Service Template (index.js + errors.js + ServiceError.js)
+#   Document 9:  Application Definition Template (minimal + complex examples)
+#   Document 10: Agent Session Template (CODING_AGENT.md)
+#   Document 11: Test Templates (unit + component + E2E)
+#   Document 12: Contract Test Template (contract test + generator)
+#
+# Usage:
+#   - Full-Stack Coding Agent copies Document 8 for each new service
+#   - Solution Architect copies Document 9 for each new definition
+#   - Orchestrator creates AGENT_*.md from Document 10 at phase start
+#   - Full-Stack Coding Agent copies unit test from Document 11 per service
+#   - Full-Stack Coding Agent copies component/E2E from Document 11 per service/workflow
+#   - Full-Stack Coding Agent generates contract tests from Document 12 per service
+#
