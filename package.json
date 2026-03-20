@@ -1,0 +1,25 @@
+{
+  "name": "CMS",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FABRIC project: CMS",
+  "scripts": {
+    "validate": "npx fabric validate models/cms.canonical-model.yaml",
+    "codegen": "npx fabric codegen models/cms.canonical-model.yaml",
+    "gate": "npx fabric gate --model models/cms.canonical-model.yaml",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "@pmcoe-ai1/fabric-cli": "*",
+    "typescript": "^5.4.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "@types/jest": "^30.0.0"
+  }
+}

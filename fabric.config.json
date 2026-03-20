@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "domains": {
+    "cms": {
+      "model": "models/cms.canonical-model.yaml",
+      "outputDir": "generated",
+      "filledDir": "templates",
+      "rulesDir": "src/rules"
+    }
+  }
+}
