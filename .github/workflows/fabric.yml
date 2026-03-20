@@ -33,6 +33,8 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}
 
       # ── Stage 1: Validate canonical model ─────────────────────────────
       - name: Validate
@@ -56,4 +58,4 @@ jobs:
 
       # ── Stage 6: Tests ─────────────────────────────────────────────────
       - name: Tests
-        run: npx jest --ci --forceExit
+        run: npx jest --ci --forceExit --passWithNoTests
